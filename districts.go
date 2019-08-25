@@ -26,13 +26,15 @@ func getRepsByDistrict(w http.ResponseWriter, r *http.Request) {
 	districtInfo, err := kkc.GetDistrictInfoByAddress(address)
 
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, err.Error(), 500)
+		return
 	}
 
 	rep, found := external.SeattleCityCouncil[districtInfo.Name]
 
 	if !found {
-		fmt.Println("No rep found")
+		http.Error(w, "No representative found", 400)
+		return
 	}
 
 	json.NewEncoder(w).Encode(rep)

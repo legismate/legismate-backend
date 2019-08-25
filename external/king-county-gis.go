@@ -2,6 +2,7 @@ package external
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -109,11 +110,11 @@ func (k *KingCountyClient) GetDistrictInfoByAddress(address string) (districtInf
 	getAddressResponse, err := kkc.GetGISFromAddress(address)
 
 	if err != nil {
-		fmt.Println(err)
+		return
 	}
 
 	if len(getAddressResponse.Candidates) == 0 {
-		fmt.Println("No results found")
+		err = errors.New("No candidates found")
 		return
 	}
 
@@ -122,11 +123,11 @@ func (k *KingCountyClient) GetDistrictInfoByAddress(address string) (districtInf
 	getDistrictInfoResponse, err := kkc.GetDistrictInfoByLocation(loc)
 
 	if err != nil {
-		fmt.Println(err)
+		return
 	}
 
 	if len(getDistrictInfoResponse.Results) == 0 {
-		fmt.Println("No results found")
+		err = errors.New("No districts found")
 		return
 	}
 
