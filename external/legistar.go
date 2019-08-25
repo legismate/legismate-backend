@@ -49,14 +49,14 @@ type MatterText struct {
 }
 
 const (
-	legistarBase      = "https://webapi.legistar.com/v1/%s" // %s is city/state/etc name
-	matters           = legistarBase + "/matters"
-	matter            = matters + "/%d"
-	matterHistory     = matter + "/histories"
-	matterTextVersion = matter + "/versions"
-	matterText        = matter + "/texts/%d"
-	person            = legistarBase + "/persons"
-	personVote        = person + "/%d/votes"
+	legistarBase       = "https://webapi.legistar.com/v1/%s" // %s is city/state/etc name
+	matters            = legistarBase + "/matters"
+	matter             = matters + "/%d"
+	matterHistory      = matter + "/histories"
+	matterTextVersions = matter + "/versions"
+	matterText         = matter + "/texts/%s"
+	person             = legistarBase + "/persons"
+	personVote         = person + "/%d/votes"
 )
 
 func parseLegistarTime(lTime Datetime) (time.Time, error) {
@@ -134,20 +134,52 @@ func GetUpcomingBills(client string) ([]*models.Bill, error) {
 	return bills, nil
 }
 
-func GetSingleBillDetail(matterId int) (*models.BillDetailed, error) {
+func GetSingleBillDetail(matterId int, client string) (*models.BillDetailed, error) {
 	cli := &http.Client{}
-	// fixme: don't want to have to require address at every api call, but legistar does require you always pass the "Client"
-	//  variable. so we have to figure something out here. for now we are hardcoding.
-	resp, err := doSimpleAPIGetRequest(cli, fmt.Sprintf(matter, "seattle", matterId))
+	resp, err := doSimpleAPIGetRequest(cli, fmt.Sprintf(matter, client, matterId))
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if resp != nil {
+			resp.Body.Close()
+		}
+	}()
 	var matter Matter
 	if err = json.NewDecoder(resp.Body).Decode(&matter); err != nil {
 		return nil, fmt.Errorf("unable to unmarshal response! error: %s", err.Error())
 	}
-	fmt.Printf("matter single!! %+v", matter)
-	//detailed := &models.BillDetailed{Bill: mapSingleMatterToBill(&matter)}
-	return nil, nil
+	resp.Body.Close()
+	// create filled out bill detail model and add extra data from matters api call
+	detailed := &models.BillDetailed{Bill: mapSingleMatterToBill(&matter)}
+	introDate, err := parseLegistarTime(matter.MatterIntroDate)
+	if err != nil {
+		fmt.Printf("Unable to parse time!! Error: %s", err.Error())
+	}
+	detailed.IntroducedDate = introDate
+
+	// get latest version id of bill to get text body and set current version number
+	resp, err = doSimpleAPIGetRequest(cli, fmt.Sprintf(matterTextVersions, "seattle", matterId))
+	if err != nil {
+		return nil, err
+	}
+	var versions []*MatterVersions
+	if err = json.NewDecoder(resp.Body).Decode(&versions); err != nil {
+		return nil, fmt.Errorf("unable to decode versions response! error: %s", err.Error())
+	}
+	resp.Body.Close()
+	latest := versions[len(versions)-1].Key
+	detailed.CurrentVersionNumber = versions[len(versions)-1].Value
+	resp, err = doSimpleAPIGetRequest(cli, fmt.Sprintf(matterText, "seattle", matterId, latest))
+	if err != nil {
+		return nil, err
+	}
+	var body MatterText
+	if err = json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		return nil, fmt.Errorf("unable to decode bill text response! error: %s", err.Error())
+	}
+	resp.Body.Close()
+
+	detailed.FullText = body.MatterTextPlain
+	return detailed, nil
 }

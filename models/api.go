@@ -80,5 +80,5 @@ type BillDetailed struct {
 	*Bill
 	FullText             string
 	IntroducedDate       time.Time
-	CurrentVersionNumber int
+	CurrentVersionNumber string
 }
