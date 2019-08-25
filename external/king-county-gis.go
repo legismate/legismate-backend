@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/legismate/legismate_backend/models"
 )
 
 type Location struct {
@@ -99,4 +101,38 @@ func (k *KingCountyClient) GetDistrictInfoByLocation(loc Location) (getDistrictI
 	}
 
 	return getDistrictInfo, nil
+}
+
+func (k *KingCountyClient) GetDistrictInfoByAddress(address string) (districtInfo models.District, err error) {
+	var kkc = &KingCountyClient{}
+
+	getAddressResponse, err := kkc.GetGISFromAddress(address)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if len(getAddressResponse.Candidates) == 0 {
+		fmt.Println("No results found")
+		return
+	}
+
+	loc := getAddressResponse.Candidates[0].Location
+
+	getDistrictInfoResponse, err := kkc.GetDistrictInfoByLocation(loc)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if len(getDistrictInfoResponse.Results) == 0 {
+		fmt.Println("No results found")
+		return
+	}
+
+	districtInfo = models.District{
+		Name: getDistrictInfoResponse.Results[len(getDistrictInfoResponse.Results)-1].Value,
+	}
+
+	return
 }
