@@ -73,4 +73,5 @@ type Bill struct {
 	AgendaDate time.Time
 	Status     string // could be an enum when we figure out what the valuable ones are. currently corresponds to MatterStatusName
 	Committee  string // eg Sustainability and Transportation Committee
+	LegistarID int    // from legistar
 }

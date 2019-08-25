@@ -58,6 +58,7 @@ func mapMattersToBills(matters []*Matter) (bills []*models.Bill) {
 			AgendaDate: agendaDate,
 			Status:     matter.MatterStatusName,
 			Committee:  matter.MatterBodyName,
+			LegistarID: matter.MatterId,
 		})
 	}
 	return bills
