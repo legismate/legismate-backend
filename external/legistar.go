@@ -71,7 +71,6 @@ func GetUpcomingBills(client string) ([]*models.Bill, error) {
 	q := req.URL.Query()
 	q.Add("$filter", fmt.Sprintf("MatterAgendaDate ge datetime'%s'", today.Format("2006-01-02")))
 	req.URL.RawQuery = q.Encode()
-	fmt.Println()
 	resp, err := cli.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create get, err: %s", err.Error())
@@ -84,7 +83,6 @@ func GetUpcomingBills(client string) ([]*models.Bill, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&matters); err != nil {
 		return nil, fmt.Errorf("unable to decode response! error: %s", err.Error())
 	}
-	fmt.Println("matters: %+v", matters)
 	bills := mapMattersToBills(matters)
 	return bills, nil
 }
