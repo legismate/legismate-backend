@@ -31,6 +31,7 @@ func getRouter() *chi.Mux {
 
 	r.Route("/bills", func(r chi.Router) {
 		r.Get("/", getBillsByLevel)
+		// todo: review -- changed this to /legistar since its specific to legistar
 		r.Get("/legistar/{legistarId}", getBillsByLegistarID)
 	})
 
