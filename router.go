@@ -32,7 +32,5 @@ func getRouter() *chi.Mux {
 		r.Get("/{legistarId}", getBillsByLegistarId)
 	})
 
-	// /bills/&level=city?address=______&timeframe=future&keyword=lgbtq
-
 	return r
 }
