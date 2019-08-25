@@ -1,6 +1,6 @@
 package external
 
-type District int
+type DistrictI int
 
 type CouncilMember struct {
 	MemberName          string
@@ -11,7 +11,7 @@ type CouncilMember struct {
 	Phone               string
 }
 
-var SeattleCityCouncil = map[District]*CouncilMember{
+var SeattleCityCouncil = map[DistrictI]*CouncilMember{
 	1: {
 		"Lisa Herbold",
 		"West Seattle, South Park",

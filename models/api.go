@@ -1,4 +1,5 @@
-package main
+// structs for our API
+package models
 
 // Phone is a phone
 type Phone string
