@@ -2,16 +2,17 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/legismate/legismate_backend/models"
 	"net/http"
 
+	//"github.com/go-chi/chi"
+
 	"github.com/legismate/legismate_backend/external"
+	"github.com/legismate/legismate_backend/models"
 )
 
 // getBillsByLevel will return bills by a specific level enum, if no level query parameter is passed, it will error out
 //   Right now we are only doing seattle city council, so no matter what we're only using that.
 func getBillsByLevel(w http.ResponseWriter, r *http.Request) {
-	respEncoder := json.NewEncoder(w)
 	level := r.URL.Query().Get("level")
 	levelEnum, err := models.GetLevelFromString(level)
 	if err != nil || levelEnum != models.City {
@@ -30,6 +31,7 @@ func getBillsByLevel(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "upcoming bills error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+	respEncoder := json.NewEncoder(w)
 	if err = respEncoder.Encode(bills); err != nil {
 		http.Error(w, "encoding response error: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -37,5 +39,6 @@ func getBillsByLevel(w http.ResponseWriter, r *http.Request) {
 }
 
 func getBillsByLegistarID(w http.ResponseWriter, r *http.Request) {
-
+	//matterId := chi.URLParam(r, "legistarId")
+	// get specific bill
 }

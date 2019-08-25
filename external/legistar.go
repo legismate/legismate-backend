@@ -37,31 +37,72 @@ type Matter struct {
 	MatterStatusName      string
 }
 
+type MatterVersions struct {
+	Key   string
+	Value string
+}
+
+type MatterText struct {
+	MatterTextId              int
+	MatterTextPlain           string
+	MatterTextLastModifiedUtc Datetime
+}
+
 const (
-	legistarBase  = "https://webapi.legistar.com/v1/%s" // %s is city/state/etc name
-	matters       = legistarBase + "/matters"
-	matterHistory = matters + "/%d/histories"
-	person        = legistarBase + "/persons"
-	personVote    = person + "/%d/votes"
+	legistarBase      = "https://webapi.legistar.com/v1/%s" // %s is city/state/etc name
+	matters           = legistarBase + "/matters"
+	matter            = matters + "/%d"
+	matterHistory     = matter + "/histories"
+	matterTextVersion = matter + "/versions"
+	matterText        = matter + "/texts/%d"
+	person            = legistarBase + "/persons"
+	personVote        = person + "/%d/votes"
 )
+
+func parseLegistarTime(lTime Datetime) (time.Time, error) {
+	return time.Parse("2006-01-02T15:04:05", string(lTime))
+}
+
+func mapSingleMatterToBill(matter *Matter) (bill *models.Bill) {
+	agendaDate, err := parseLegistarTime(matter.MatterAgendaDate)
+	if err != nil {
+		fmt.Printf("can't handle this date!! %s \n Error: %s", matter.MatterAgendaDate, err.Error())
+		// todo: don't know if we should bail
+	}
+	bill = &models.Bill{
+		File:       matter.MatterFile,
+		Title:      matter.MatterTitle,
+		AgendaDate: agendaDate,
+		Status:     matter.MatterStatusName,
+		Committee:  matter.MatterBodyName,
+		LegistarID: matter.MatterId,
+	}
+	return
+}
 
 func mapMattersToBills(matters []*Matter) (bills []*models.Bill) {
 	for _, matter := range matters {
-		agendaDate, err := time.Parse("2006-01-02T15:04:05", string(matter.MatterAgendaDate))
-		if err != nil {
-			fmt.Printf("can't handle this date!! %s \n Error: %s", matter.MatterAgendaDate, err.Error())
-			// todo: don't know if we should bail
-		}
-		bills = append(bills, &models.Bill{
-			File:       matter.MatterFile,
-			Title:      matter.MatterTitle,
-			AgendaDate: agendaDate,
-			Status:     matter.MatterStatusName,
-			Committee:  matter.MatterBodyName,
-			LegistarID: matter.MatterId,
-		})
+		bills = append(bills, mapSingleMatterToBill(matter))
 	}
 	return bills
+}
+
+// doSimpleAPIGetRequest will create a new request and set application/json content type header, the perform the get request.
+//    if status code != ok, will return error
+func doSimpleAPIGetRequest(cli *http.Client, URL string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodGet, URL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create http request, err: %s", err.Error())
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := cli.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create get, err: %s", err.Error())
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("got bad status code " + resp.Status)
+	}
+	return resp, nil
 }
 
 func GetUpcomingBills(client string) ([]*models.Bill, error) {
@@ -72,7 +113,6 @@ func GetUpcomingBills(client string) ([]*models.Bill, error) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	// get everything later than today
-	// MatterAgendaDate+ge+datetime%272019-08-01%27
 	today := time.Now()
 	q := req.URL.Query()
 	q.Add("$filter", fmt.Sprintf("MatterAgendaDate ge datetime'%s'", today.Format("2006-01-02")))
@@ -92,4 +132,22 @@ func GetUpcomingBills(client string) ([]*models.Bill, error) {
 	}
 	bills := mapMattersToBills(matters)
 	return bills, nil
+}
+
+func GetSingleBillDetail(matterId int) (*models.BillDetailed, error) {
+	cli := &http.Client{}
+	// fixme: don't want to have to require address at every api call, but legistar does require you always pass the "Client"
+	//  variable. so we have to figure something out here. for now we are hardcoding.
+	resp, err := doSimpleAPIGetRequest(cli, fmt.Sprintf(matter, "seattle", matterId))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var matter Matter
+	if err = json.NewDecoder(resp.Body).Decode(&matter); err != nil {
+		return nil, fmt.Errorf("unable to unmarshal response! error: %s", err.Error())
+	}
+	fmt.Printf("matter single!! %+v", matter)
+	//detailed := &models.BillDetailed{Bill: mapSingleMatterToBill(&matter)}
+	return nil, nil
 }

@@ -75,3 +75,10 @@ type Bill struct {
 	Committee  string // eg Sustainability and Transportation Committee
 	LegistarID int    // from legistar
 }
+
+type BillDetailed struct {
+	*Bill
+	FullText             string
+	IntroducedDate       time.Time
+	CurrentVersionNumber int
+}
