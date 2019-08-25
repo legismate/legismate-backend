@@ -23,13 +23,13 @@ func getRouter() *chi.Mux {
 	})
 
 	r.Route("/representatives", func(r chi.Router) {
-		r.Get("/{repId}", getRepById)
+		r.Get("/{repId}", getRepByID)
 		r.Get("/{repId}/history", getRepBillHistory)
 	})
 
 	r.Route("/bills", func(r chi.Router) {
 		r.Get("/", getBillsByLevel)
-		r.Get("/{legistarId}", getBillsByLegistarId)
+		r.Get("/{legistarId}", getBillsByLegistarID)
 	})
 
 	return r
