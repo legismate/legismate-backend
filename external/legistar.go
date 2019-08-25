@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/legismate/legismate_backend/models"
@@ -182,4 +183,25 @@ func GetSingleBillDetail(matterId int, client string) (*models.BillDetailed, err
 
 	detailed.FullText = body.MatterTextPlain
 	return detailed, nil
+}
+
+func GetPersonByEmail(email string) (*Person, error) {
+	cli := &http.Client{}
+	filter := fmt.Sprintf("PersonEmail eq '%s'", email)
+	escapedFilter := url.QueryEscape(filter)
+	resp, err := doSimpleAPIGetRequest(cli, fmt.Sprintf(person, "seattle")+"?$filter="+escapedFilter)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var persons []Person
+	if err = json.NewDecoder(resp.Body).Decode(&persons); err != nil {
+		return nil, fmt.Errorf("unable to unmarshal response! error: %s", err.Error())
+	}
+
+	if len(persons) == 0 {
+		return nil, fmt.Errorf("No person by e-mail %s", email)
+	}
+
+	return &persons[0], nil
 }
