@@ -1,87 +1,88 @@
 package external
 
-type DistrictI int
+import "github.com/legismate/legismate_backend/models"
 
-type CouncilMember struct {
-	MemberName          string
-	DistrictDescription string
-	PhotoURL            string
-	Website             string
-	Email               string
-	Phone               string
-}
-
-var SeattleCityCouncil = map[DistrictI]*CouncilMember{
-	1: {
+// string key may change -- we probably awant to just key off what we get from king county gis
+var SeattleCityCouncil = map[string]*models.Representative{
+	"Seattle District 1": {
 		"Lisa Herbold",
-		"West Seattle, South Park",
-		"//www.seattle.gov/Images/Council/Members/Herbold/Herbold_225x225.jpg",
-		"/herbold",
+		"Undetermined",
+		[]models.Phone{"206-684-8803"},
 		"Lisa.Herbold@seattle.gov",
-		"206-684-8803",
+		[]models.URL{"/herbold"},
+		"//www.seattle.gov/Images/Council/Members/Herbold/Herbold_225x225.jpg",
+		&models.Office{LevelEnum: models.City, Name: "Seattle District 1"},
 	},
-	2: {
+	"Seattle District 2": {
 		"Bruce Harrell",
-		"South Seattle, Georgetown",
-		"//www.seattle.gov/Images/Council/Members/Harrell/Bruce-Harrell-2018_225x225.jpg",
-		"/harrell",
+		"Undetermined",
+		[]models.Phone{"206-684-8804"},
 		"Bruce.Harrell@seattle.gov",
-		"206-684-8804",
+		[]models.URL{"/harrell"},
+		"//www.seattle.gov/Images/Council/Members/Harrell/Bruce-Harrell-2018_225x225.jpg",
+		&models.Office{LevelEnum: models.City, Name: "Seattle District 2"},
 	},
-	3: {
+	"Seattle District 3": {
 		"Kshama Sawant",
-		"Central Seattle",
-		"//www.seattle.gov/Images/Council/Members/Sawant/Sawant_225x225.jpg",
-		"/sawant",
+		"Undetermined",
+		[]models.Phone{"206-684-8016"},
 		"Kshama.Sawant@seattle.gov",
-		"206-684-8016",
+		[]models.URL{"/sawant"},
+		"//www.seattle.gov/Images/Council/Members/Sawant/Sawant_225x225.jpg",
+		&models.Office{LevelEnum: models.City, Name: "Seattle District 3"},
 	},
-	4: {
+	"Seattle District 4": {
 		"Abel Pacheco",
-		"Northeast Seattle",
-		"//www.seattle.gov/Images/Council/Members/Pacheco/Abel-Pacheco-2019---Bokeh-Background.jpg",
-		"/pacheco",
+		"Undetermined",
+		[]models.Phone{"206-684-8808"},
 		"Abel.Pacheco@seattle.gov",
-		"206-684-8808",
+		[]models.URL{"/pacheco"},
+		"//www.seattle.gov/Images/Council/Members/Pacheco/Abel-Pacheco-2019---Bokeh-Background.jpg",
+		&models.Office{LevelEnum: models.City, Name: "Seattle District 4"},
 	},
-	5: {
+	"Seattle District 5": {
 		"Debora Juarez",
-		"North Seattle",
-		"//www.seattle.gov/Images/Council/Members/Juarez/Debora-Juarez-2018_225x225.jpg",
-		"/juarez",
+		"Undetermined",
+		[]models.Phone{"206-684-8805"},
 		"Debora.Juarez@seattle.gov",
-		"206-684-8805",
+		[]models.URL{"/juarez"},
+		"//www.seattle.gov/Images/Council/Members/Pacheco/Abel-Pacheco-2019---Bokeh-Background.jpg",
+		&models.Office{LevelEnum: models.City, Name: "Seattle District 5"},
 	},
-	6: {
+	"Seattle District 6": {
 		"Mike O'Brien",
-		"Northwest Seattle",
-		"//www.seattle.gov/Images/Council/Members/OBrien/Mike-OBrien-2018_225x225.jpg",
-		"/obrien",
+		"Undetermined",
+		[]models.Phone{"206-684-8800"},
 		"Mike.OBrien@seattle.gov",
-		"206-684-8800",
+		[]models.URL{"/obrien"},
+		"//www.seattle.gov/Images/Council/Members/OBrien/Mike-OBrien-2018_225x225.jpg",
+		&models.Office{LevelEnum: models.City, Name: "Seattle District 6"},
 	},
-	7: {
+	"Seattle District 7": {
 		"Sally Bagshaw",
-		"Pioneer Square to Magnolia",
-		"//www.seattle.gov/Images/Council/Members/Bagshaw/Bagshaw_225x225.jpg",
-		"/bagshaw",
+		"Undetermined",
+		[]models.Phone{"206-684-8801"},
 		"Sally.Bagshaw@seattle.gov",
-		"206-684-8801",
+		[]models.URL{"/bagshaw"},
+		"//www.seattle.gov/Images/Council/Members/Bagshaw/Bagshaw_225x225.jpg",
+		&models.Office{LevelEnum: models.City, Name: "Seattle District 7"},
 	},
-	8: {
+	"Seattle District 8": {
 		"Teresa Mosqueda",
-		"Citywide",
-		"//www.seattle.gov/Images/Council/Members/Mosqueda/Mosqueda_225x225.jpg",
-		"/mosqueda",
+		"Undetermined",
+		[]models.Phone{"206-684-8806"},
 		"Teresa.Mosqueda@seattle.gov",
-		"206-684-8806",
+		[]models.URL{"/mosqueda"},
+		"//www.seattle.gov/Images/Council/Members/Mosqueda/Mosqueda_225x225.jpg",
+		&models.Office{LevelEnum: models.City, Name: "Seattle District 8"},
 	},
-	9: {
+	"Seattle District 9": {
 		"Lorena González",
-		"Citywide",
-		"//www.seattle.gov/Images/Council/Members/Gonzalez/Gonzalez-225x225.jpg",
-		"/gonzalez",
+		"Undetermined",
+		[]models.Phone{"206-684-8802"},
 		"Lorena.Gonzalez@seattle.gov",
-		"206-684-8802",
+		[]models.URL{"/gonzalez"},
+		"//www.seattle.gov/Images/Council/Members/Gonzalez/Gonzalez-225x225.jpg",
+		&models.Office{LevelEnum: models.City, Name: "Seattle District 9"},
 	},
 }

@@ -7,6 +7,15 @@ type Phone string
 // URL is a website URL
 type URL string
 
+type LevelEnum int
+
+const (
+	City LevelEnum = iota
+	County
+	State
+	Federal
+)
+
 // TODO: type LevelEnum string
 
 // Representative is a council member
@@ -17,13 +26,13 @@ type Representative struct {
 	Email    string
 	URLs     []URL
 	PhotoURL URL
-	Office   Office
+	Office   *Office
 }
 
 // Office is the type of office a representative holds
 type Office struct {
-	LevelEnum string // CITY
-	Name      string // Seattle District 6
+	LevelEnum LevelEnum // CITY
+	Name      string    // Seattle District 6
 }
 
 // District is a local division of government
