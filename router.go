@@ -15,6 +15,7 @@ func getRouter() *chi.Mux {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
+	r.Use(middleware.SetHeader("Content-type", "application/json"))
 
 	// everything in districts will take address and level query param
 	r.Route("/districts", func(r chi.Router) { // everything in districts will take address
