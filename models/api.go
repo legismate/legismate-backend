@@ -82,3 +82,12 @@ type BillDetailed struct {
 	IntroducedDate       time.Time
 	CurrentVersionNumber string
 }
+
+type Address struct {
+	Raw string
+}
+
+func (a *Address) GetLevelValue(levelEnum LevelEnum) string {
+	// TODO: implement this
+	return "seattle"
+}

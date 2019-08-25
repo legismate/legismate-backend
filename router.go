@@ -1,11 +1,31 @@
 package main
 
 import (
+	"context"
+	"net/http"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/legismate/legismate_backend/models"
 )
+
+func AddressCtx(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rawAddress := r.URL.Query().Get("address")
+
+		if rawAddress == "" {
+			http.Error(w, "Missing 'address' query parameter", http.StatusBadRequest)
+			return
+		}
+
+		address := models.Address{Raw: rawAddress}
+
+		ctx := context.WithValue(r.Context(), "address", &address)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func getRouter() *chi.Mux {
 	r := chi.NewRouter()
@@ -16,6 +36,7 @@ func getRouter() *chi.Mux {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(middleware.SetHeader("Content-type", "application/json"))
+	r.Use(AddressCtx)
 
 	// everything in districts will take address and level query param
 	r.Route("/districts", func(r chi.Router) { // everything in districts will take address
