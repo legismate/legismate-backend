@@ -105,24 +105,27 @@ func doSimpleAPIGetRequest(cli *http.Client, URL string) (*http.Response, error)
 	return resp, nil
 }
 
+// GetUpcomingBills will return a slice of bills that have an agenda date on or after today
 func GetUpcomingBills(client string) ([]*models.Bill, error) {
 	cli := &http.Client{}
+	today := time.Now()
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(matters, client), nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create http request, err: %s", err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json")
-	// get everything later than today
-	today := time.Now()
+	// get everything later than today, and order the results so that the most recent items are first in the slice
 	q := req.URL.Query()
 	q.Add("$filter", fmt.Sprintf("MatterAgendaDate ge datetime'%s'", today.Format("2006-01-02")))
 	q.Add("$orderby", "MatterAgendaDate asc")
 	req.URL.RawQuery = q.Encode()
+
 	resp, err := cli.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create get, err: %s", err.Error())
 	}
 	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New("got bad status code " + resp.Status)
 	}
@@ -134,12 +137,16 @@ func GetUpcomingBills(client string) ([]*models.Bill, error) {
 	return bills, nil
 }
 
+// GetSingleBillDetail will grab all the standard bill information that comes from GetUpcomingBills, but it will
+// 	Also return the most recently updated time as well as the full text of the bill, and what version it is on
 func GetSingleBillDetail(matterId int, client string) (*models.BillDetailed, error) {
 	cli := &http.Client{}
 	resp, err := doSimpleAPIGetRequest(cli, fmt.Sprintf(matter, client, matterId))
 	if err != nil {
 		return nil, err
 	}
+	// ensure that the body is closed. we close it after every successful marshaling of the response into a struct,
+	// this is for the unhappy paths
 	defer func() {
 		if resp != nil {
 			resp.Body.Close()
@@ -168,9 +175,11 @@ func GetSingleBillDetail(matterId int, client string) (*models.BillDetailed, err
 		return nil, fmt.Errorf("unable to decode versions response! error: %s", err.Error())
 	}
 	resp.Body.Close()
-	latest := versions[len(versions)-1].Key
-	detailed.CurrentVersionNumber = versions[len(versions)-1].Value
-	resp, err = doSimpleAPIGetRequest(cli, fmt.Sprintf(matterText, "seattle", matterId, latest))
+
+	// grab the last version item, its ordered by "Value" field so the last will always be the most current
+	latestVersion := versions[len(versions)-1]
+	detailed.CurrentVersionNumber = latestVersion.Value
+	resp, err = doSimpleAPIGetRequest(cli, fmt.Sprintf(matterText, "seattle", matterId, latestVersion.Key))
 	if err != nil {
 		return nil, err
 	}
