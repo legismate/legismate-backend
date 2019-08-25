@@ -76,6 +76,7 @@ func GetUpcomingBills(client string) ([]*models.Bill, error) {
 	today := time.Now()
 	q := req.URL.Query()
 	q.Add("$filter", fmt.Sprintf("MatterAgendaDate ge datetime'%s'", today.Format("2006-01-02")))
+	q.Add("$orderby", "MatterAgendaDate asc")
 	req.URL.RawQuery = q.Encode()
 	resp, err := cli.Do(req)
 	if err != nil {
