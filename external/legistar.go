@@ -47,10 +47,15 @@ const (
 
 func mapMattersToBills(matters []*Matter) (bills []*models.Bill) {
 	for _, matter := range matters {
+		agendaDate, err := time.Parse("2006-01-02T15:04:05", string(matter.MatterAgendaDate))
+		if err != nil {
+			fmt.Printf("can't handle this date!! %s \n Error: %s", matter.MatterAgendaDate, err.Error())
+			// todo: don't know if we should bail
+		}
 		bills = append(bills, &models.Bill{
 			File:       matter.MatterFile,
 			Title:      matter.MatterTitle,
-			AgendaDate: nil, // todo: add in parsing
+			AgendaDate: agendaDate,
 			Status:     matter.MatterStatusName,
 			Committee:  matter.MatterBodyName,
 		})

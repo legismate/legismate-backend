@@ -70,7 +70,7 @@ type District struct {
 type Bill struct {
 	File       string // eg Res 31894
 	Title      string // eg A RESOLUTION relating to the funding of priority projects in the 2019-2024 Bicycle Master Plan Implementation Plan; requesting that the Mayor commit to building out the Bicycle Master Plan and identify funding for priority Bicycle Master Plan projects in the Mayor’s 2020 Proposed Budget.
-	AgendaDate *time.Time
+	AgendaDate time.Time
 	Status     string // could be an enum when we figure out what the valuable ones are. currently corresponds to MatterStatusName
 	Committee  string // eg Sustainability and Transportation Committee
 }
