@@ -16,8 +16,6 @@ const (
 	Federal
 )
 
-// TODO: type LevelEnum string
-
 // Representative is a council member
 type Representative struct {
 	Name     string

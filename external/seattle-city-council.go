@@ -4,7 +4,7 @@ import "github.com/legismate/legismate_backend/models"
 
 // string key may change -- we probably awant to just key off what we get from king county gis
 var SeattleCityCouncil = map[string]*models.Representative{
-	"Seattle District 1": {
+	"Seattle Council Dst 1": {
 		"Lisa Herbold",
 		"Undetermined",
 		[]models.Phone{"206-684-8803"},
@@ -13,7 +13,7 @@ var SeattleCityCouncil = map[string]*models.Representative{
 		"//www.seattle.gov/Images/Council/Members/Herbold/Herbold_225x225.jpg",
 		&models.Office{LevelEnum: models.City, Name: "Seattle District 1"},
 	},
-	"Seattle District 2": {
+	"Seattle Council Dst 2": {
 		"Bruce Harrell",
 		"Undetermined",
 		[]models.Phone{"206-684-8804"},
@@ -22,7 +22,7 @@ var SeattleCityCouncil = map[string]*models.Representative{
 		"//www.seattle.gov/Images/Council/Members/Harrell/Bruce-Harrell-2018_225x225.jpg",
 		&models.Office{LevelEnum: models.City, Name: "Seattle District 2"},
 	},
-	"Seattle District 3": {
+	"Seattle Council Dst 3": {
 		"Kshama Sawant",
 		"Undetermined",
 		[]models.Phone{"206-684-8016"},
@@ -31,7 +31,7 @@ var SeattleCityCouncil = map[string]*models.Representative{
 		"//www.seattle.gov/Images/Council/Members/Sawant/Sawant_225x225.jpg",
 		&models.Office{LevelEnum: models.City, Name: "Seattle District 3"},
 	},
-	"Seattle District 4": {
+	"Seattle Council Dst 4": {
 		"Abel Pacheco",
 		"Undetermined",
 		[]models.Phone{"206-684-8808"},
@@ -40,7 +40,7 @@ var SeattleCityCouncil = map[string]*models.Representative{
 		"//www.seattle.gov/Images/Council/Members/Pacheco/Abel-Pacheco-2019---Bokeh-Background.jpg",
 		&models.Office{LevelEnum: models.City, Name: "Seattle District 4"},
 	},
-	"Seattle District 5": {
+	"Seattle Council Dst 5": {
 		"Debora Juarez",
 		"Undetermined",
 		[]models.Phone{"206-684-8805"},
@@ -49,7 +49,7 @@ var SeattleCityCouncil = map[string]*models.Representative{
 		"//www.seattle.gov/Images/Council/Members/Pacheco/Abel-Pacheco-2019---Bokeh-Background.jpg",
 		&models.Office{LevelEnum: models.City, Name: "Seattle District 5"},
 	},
-	"Seattle District 6": {
+	"Seattle Council Dst 6": {
 		"Mike O'Brien",
 		"Undetermined",
 		[]models.Phone{"206-684-8800"},
@@ -58,7 +58,7 @@ var SeattleCityCouncil = map[string]*models.Representative{
 		"//www.seattle.gov/Images/Council/Members/OBrien/Mike-OBrien-2018_225x225.jpg",
 		&models.Office{LevelEnum: models.City, Name: "Seattle District 6"},
 	},
-	"Seattle District 7": {
+	"Seattle Council Dst 7": {
 		"Sally Bagshaw",
 		"Undetermined",
 		[]models.Phone{"206-684-8801"},
@@ -67,7 +67,7 @@ var SeattleCityCouncil = map[string]*models.Representative{
 		"//www.seattle.gov/Images/Council/Members/Bagshaw/Bagshaw_225x225.jpg",
 		&models.Office{LevelEnum: models.City, Name: "Seattle District 7"},
 	},
-	"Seattle District 8": {
+	"Seattle Council Dst 8": {
 		"Teresa Mosqueda",
 		"Undetermined",
 		[]models.Phone{"206-684-8806"},
@@ -76,7 +76,7 @@ var SeattleCityCouncil = map[string]*models.Representative{
 		"//www.seattle.gov/Images/Council/Members/Mosqueda/Mosqueda_225x225.jpg",
 		&models.Office{LevelEnum: models.City, Name: "Seattle District 8"},
 	},
-	"Seattle District 9": {
+	"Seattle Council Dst 9": {
 		"Lorena González",
 		"Undetermined",
 		[]models.Phone{"206-684-8802"},
