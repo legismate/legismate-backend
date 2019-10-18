@@ -8,8 +8,11 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/legismate/legismate_backend/cache"
 	"github.com/legismate/legismate_backend/models"
 )
+
+var lCache = cache.GetLegisCache()
 
 type Datetime string // todo: does json unmarshal automatically parse datetime if we set this field correctly?
 
@@ -49,6 +52,33 @@ type MatterText struct {
 	MatterTextLastModifiedUtc Datetime
 }
 
+type Vote struct {
+	VoteId              int // this is the event id when searching for event item detail to get matter id
+	VoteGuid            string
+	VoteLastModifiedUtc Datetime
+	VotePersonId        int
+	VotePersonName      string
+	VoteValueName       string
+	VoteValueId         int
+	VoteResult          int
+	VoteEventItemId     int
+}
+
+type EventItem struct {
+	EventItemId              int
+	EventItemGuid            string
+	EventItemLastModifiedUtc Datetime
+	EventItemEventId         int
+	EventItemPassedFlag      int
+	EventItemActionText      string
+	EventItemMatterId        int
+	EventItemTitle           string
+	EventItemMatterName      string
+	EventItemMatterFile      string
+	EventItemMatterType      string
+	EventItemMatterStatus    string
+}
+
 const (
 	legistarBase       = "https://webapi.legistar.com/v1/%s" // %s is city/state/etc name
 	matters            = legistarBase + "/matters"
@@ -58,14 +88,16 @@ const (
 	matterText         = matter + "/texts/%s"
 	person             = legistarBase + "/persons"
 	personVote         = person + "/%d/votes"
+	events             = legistarBase + "/Events"
+	eventItems         = events + "/%d/EventItems/%d"
 )
 
-func parseLegistarTime(lTime Datetime) (time.Time, error) {
+func ParseLegistarTime(lTime Datetime) (time.Time, error) {
 	return time.Parse("2006-01-02T15:04:05", string(lTime))
 }
 
 func mapSingleMatterToBill(matter *Matter) (bill *models.Bill) {
-	agendaDate, err := parseLegistarTime(matter.MatterAgendaDate)
+	agendaDate, err := ParseLegistarTime(matter.MatterAgendaDate)
 	if err != nil {
 		fmt.Printf("can't handle this date!! %s \n Error: %s", matter.MatterAgendaDate, err.Error())
 		// todo: don't know if we should bail
@@ -106,11 +138,24 @@ func doSimpleAPIGetRequest(cli *http.Client, URL string) (*http.Response, error)
 	return resp, nil
 }
 
+func GetLegistarApi(city string) *LegistarApi {
+	return &LegistarApi{client: city}
+}
+
+type LegistarApi struct {
+	client string
+}
+
+func (l *LegistarApi) formatUrl(pathFmt string, args ...interface{}) string {
+	args = append([]interface{}{l.client}, args...)
+	return fmt.Sprintf(pathFmt, args...)
+}
+
 // GetUpcomingBills will return a slice of bills that have an agenda date on or after today
-func GetUpcomingBills(client string) ([]*models.Bill, error) {
+func (l *LegistarApi) GetUpcomingBills() ([]*models.Bill, error) {
 	cli := &http.Client{}
 	today := time.Now()
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(matters, client), nil)
+	req, err := http.NewRequest(http.MethodGet, l.formatUrl(matters), nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create http request, err: %s", err.Error())
 	}
@@ -140,9 +185,9 @@ func GetUpcomingBills(client string) ([]*models.Bill, error) {
 
 // GetSingleBillDetail will grab all the standard bill information that comes from GetUpcomingBills, but it will
 // 	Also return the most recently updated time as well as the full text of the bill, and what version it is on
-func GetSingleBillDetail(matterId int, client string) (*models.BillDetailed, error) {
+func (l *LegistarApi) GetSingleBillDetail(matterId int) (*models.BillDetailed, error) {
 	cli := &http.Client{}
-	resp, err := doSimpleAPIGetRequest(cli, fmt.Sprintf(matter, client, matterId))
+	resp, err := doSimpleAPIGetRequest(cli, l.formatUrl(matter, matterId))
 	if err != nil {
 		return nil, err
 	}
@@ -160,14 +205,14 @@ func GetSingleBillDetail(matterId int, client string) (*models.BillDetailed, err
 	resp.Body.Close()
 	// create filled out bill detail model and add extra data from matters api call
 	detailed := &models.BillDetailed{Bill: mapSingleMatterToBill(&matter)}
-	introDate, err := parseLegistarTime(matter.MatterIntroDate)
+	introDate, err := ParseLegistarTime(matter.MatterIntroDate)
 	if err != nil {
 		fmt.Printf("Unable to parse time!! Error: %s", err.Error())
 	}
 	detailed.IntroducedDate = introDate
 
 	// get latest version id of bill to get text body and set current version number
-	resp, err = doSimpleAPIGetRequest(cli, fmt.Sprintf(matterTextVersions, "seattle", matterId))
+	resp, err = doSimpleAPIGetRequest(cli, l.formatUrl(matterTextVersions, matterId))
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +225,7 @@ func GetSingleBillDetail(matterId int, client string) (*models.BillDetailed, err
 	// grab the last version item, its ordered by "Value" field so the last will always be the most current
 	latestVersion := versions[len(versions)-1]
 	detailed.CurrentVersionNumber = latestVersion.Value
-	resp, err = doSimpleAPIGetRequest(cli, fmt.Sprintf(matterText, "seattle", matterId, latestVersion.Key))
+	resp, err = doSimpleAPIGetRequest(cli, l.formatUrl(matterTextVersions, matterId, latestVersion.Key))
 	if err != nil {
 		return nil, err
 	}
@@ -194,11 +239,18 @@ func GetSingleBillDetail(matterId int, client string) (*models.BillDetailed, err
 	return detailed, nil
 }
 
-func GetPersonByEmail(email string) (*Person, error) {
+func (l *LegistarApi) GetPersonByEmail(email string) (*Person, error) {
+	legistarPerson := &Person{}
+	cacheKey := fmt.Sprintf("GetPersonByEmail:%s", email)
+	if err := lCache.GetFromCache(cacheKey, legistarPerson); err != nil && !lCache.NotFound(err) {
+		fmt.Printf("unexpected error hitting cache, retrieving person by legistar api\n error: %s\n", err.Error())
+	} else if err == nil {
+		return legistarPerson, err
+	}
 	cli := &http.Client{}
 	filter := fmt.Sprintf("PersonEmail eq '%s'", email)
 	escapedFilter := url.QueryEscape(filter)
-	resp, err := doSimpleAPIGetRequest(cli, fmt.Sprintf(person, "seattle")+"?$filter="+escapedFilter)
+	resp, err := doSimpleAPIGetRequest(cli, l.formatUrl(person)+"?$filter="+escapedFilter)
 	if err != nil {
 		return nil, err
 	}
@@ -209,8 +261,59 @@ func GetPersonByEmail(email string) (*Person, error) {
 	}
 
 	if len(persons) == 0 {
-		return nil, fmt.Errorf("No person by e-mail %s", email)
+		return nil, fmt.Errorf("no person by e-mail %s", email)
 	}
+	legistarPerson = &persons[0]
+	lCache.AddToCache(cacheKey, legistarPerson)
+	return legistarPerson, nil
+}
 
-	return &persons[0], nil
+// GetPersonVotingRecord will return the last 50 records of votes for a rep for last number of months
+func (l *LegistarApi) GetPersonVotingRecord(personId int, months int) (votes []*Vote, err error) {
+	cli := &http.Client{}
+	sixMonthsAgo := time.Now().AddDate(0, -months, 0)
+
+	req, err := http.NewRequest(http.MethodGet, l.formatUrl(personVote, personId), nil)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create http request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	// get everything later than today, and order the results so that the most recent items are first in the slice
+	q := req.URL.Query()
+	q.Add("$filter", fmt.Sprintf("VoteLastModifiedUtc ge datetime'%s'", sixMonthsAgo.Format("2006-01-02")))
+	q.Add("$orderby", "VoteLastModifiedUtc desc")
+	//todo: function param for top?
+	q.Add("$top", "50")
+	req.URL.RawQuery = q.Encode()
+	println("legistar api string: " + req.URL.String())
+	resp, err := cli.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get voting history: %w", err)
+	}
+	defer resp.Body.Close()
+	if err = json.NewDecoder(resp.Body).Decode(&votes); err != nil {
+		return nil, fmt.Errorf("unable to unmarshal response! %w", err)
+	}
+	return
+}
+
+func (l *LegistarApi) GetEventItemDetail(eventId, eventItemId int) (*EventItem, error) {
+	cli := &http.Client{}
+	eventItem := &EventItem{}
+	cacheKey := fmt.Sprintf("GetEventItemDetail:%d", eventItemId)
+	if err := lCache.GetFromCache(cacheKey, eventItem); err != nil && !lCache.NotFound(err) {
+		fmt.Printf("unexpected error hitting cache, retrieving event item detail by legistar api\n error: %s\n", err.Error())
+	} else if err == nil {
+		return eventItem, err
+	}
+	resp, err := doSimpleAPIGetRequest(cli, l.formatUrl(eventItems, eventId, eventItemId))
+	if err != nil {
+		return nil, fmt.Errorf("unable to get event item detail: %w", err)
+	}
+	defer resp.Body.Close()
+	if err = json.NewDecoder(resp.Body).Decode(eventItem); err != nil {
+		return nil, fmt.Errorf("unable to unmarshal response! %w", err)
+	}
+	lCache.AddToCache(cacheKey, eventItem)
+	return eventItem, nil
 }

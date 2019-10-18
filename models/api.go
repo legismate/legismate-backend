@@ -82,3 +82,8 @@ type BillDetailed struct {
 	IntroducedDate       time.Time
 	CurrentVersionNumber string
 }
+
+type Vote struct {
+	*Bill
+	RepresentativeVote string // In Favor, etc
+}

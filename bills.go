@@ -28,7 +28,8 @@ func getBillsByLevel(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "levelValue is required query parameter and must be seattle", http.StatusBadRequest)
 		return
 	}
-	bills, err := external.GetUpcomingBills("seattle")
+	legistar := external.GetLegistarApi(levelValue)
+	bills, err := legistar.GetUpcomingBills()
 	if err != nil {
 		http.Error(w, "upcoming bills error: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -49,7 +50,8 @@ func getBillsByLegistarID(w http.ResponseWriter, r *http.Request) {
 	// fixme: don't want to have to require address at every api call, but legistar does require you always pass the "Client"
 	//  variable. so we have to figure something out here. for now we are hardcoding.
 	//  ** maybe everything should take address query param? **
-	detailedBill, err := external.GetSingleBillDetail(mIdInt, "seattle")
+	legistar := external.GetLegistarApi("seattle")
+	detailedBill, err := legistar.GetSingleBillDetail(mIdInt)
 	if err != nil {
 		http.Error(w, "single bill detail error: "+err.Error(), http.StatusInternalServerError)
 		return
