@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allegro/bigcache"
+	log "github.com/sirupsen/logrus"
 	"sync"
 	"time"
 )
@@ -37,11 +38,11 @@ func (l *legisCache) Delete(key string) (err error) {
 func (l *legisCache) AddToCache(key string, object interface{}) {
 	objectJson, err := json.Marshal(object)
 	if err != nil {
-		fmt.Printf("legisCache marshal error %s\nerror: %s ", key, err.Error())
+		log.WithError(err).WithField("legisCacheKey", key).Error("legisCache marshal error")
 		return
 	}
 	if err = l.c.Set(key, objectJson); err != nil {
-		fmt.Printf("legisCache set error %s\nerror: %s", key, err.Error())
+		log.WithError(err).WithField("legisCacheKey", key).Error("legisCache set error")
 	}
 }
 
@@ -53,7 +54,7 @@ func (l *legisCache) GetFromCache(key string, objectToUnmarshal interface{}) err
 	if err := json.Unmarshal(retrievedItem, objectToUnmarshal); err != nil {
 		return fmt.Errorf("legisCache unmmarshal error: %w")
 	}
-	fmt.Printf("hit legisCache for %s, returning unmarshaled object \n", key)
+	log.WithField("legisCacheKey", key).Info("hit legisCache, returning unmarshaled object")
 	return nil
 }
 

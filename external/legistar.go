@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/legismate/legismate_backend/cache"
 	"github.com/legismate/legismate_backend/models"
 )
@@ -99,7 +101,7 @@ func ParseLegistarTime(lTime Datetime) (time.Time, error) {
 func mapSingleMatterToBill(matter *Matter) (bill *models.Bill) {
 	agendaDate, err := ParseLegistarTime(matter.MatterAgendaDate)
 	if err != nil {
-		fmt.Printf("can't handle this date!! %s \n Error: %s", matter.MatterAgendaDate, err.Error())
+		log.WithError(err).Errorf("can't handle this date! %s", matter.MatterAgendaDate)
 		// todo: don't know if we should bail
 	}
 	bill = &models.Bill{
@@ -207,7 +209,7 @@ func (l *LegistarApi) GetSingleBillDetail(matterId int) (*models.BillDetailed, e
 	detailed := &models.BillDetailed{Bill: mapSingleMatterToBill(&matter)}
 	introDate, err := ParseLegistarTime(matter.MatterIntroDate)
 	if err != nil {
-		fmt.Printf("Unable to parse time!! Error: %s", err.Error())
+		log.WithError(err).Error("unable to parse time!")
 	}
 	detailed.IntroducedDate = introDate
 
@@ -243,7 +245,7 @@ func (l *LegistarApi) GetPersonByEmail(email string) (*Person, error) {
 	legistarPerson := &Person{}
 	cacheKey := fmt.Sprintf("GetPersonByEmail:%s", email)
 	if err := lCache.GetFromCache(cacheKey, legistarPerson); err != nil && !lCache.NotFound(err) {
-		fmt.Printf("unexpected error hitting cache, retrieving person by legistar api\n error: %s\n", err.Error())
+		log.WithError(err).Error("unexpected error hitting cache, retrieving person by legistar api")
 	} else if err == nil {
 		return legistarPerson, err
 	}
@@ -302,7 +304,7 @@ func (l *LegistarApi) GetEventItemDetail(eventId, eventItemId int) (*EventItem, 
 	eventItem := &EventItem{}
 	cacheKey := fmt.Sprintf("GetEventItemDetail:%d", eventItemId)
 	if err := lCache.GetFromCache(cacheKey, eventItem); err != nil && !lCache.NotFound(err) {
-		fmt.Printf("unexpected error hitting cache, retrieving event item detail by legistar api\n error: %s\n", err.Error())
+		log.WithError(err).Error("unexpected error hitting cache, retrieving event item detail by legistar api")
 	} else if err == nil {
 		return eventItem, err
 	}
