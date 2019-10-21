@@ -140,12 +140,15 @@ func doSimpleAPIGetRequest(cli *http.Client, URL string) (*http.Response, error)
 	return resp, nil
 }
 
-func GetLegistarApi(city string) *LegistarApi {
-	return &LegistarApi{client: city}
+func GetLegistarApi(city string, cache *cache.LegisCache) *LegistarApi {
+	return &LegistarApi{client: city, cache: cache}
 }
 
+// LegistarApi provides methods for retrieving reps & bill events from legistar (http://webapi.legistar.com)
 type LegistarApi struct {
+	// client is the city/county/state that we are requesting from. we may not want to include this... i'm not sure yet
 	client string
+	cache  *cache.LegisCache
 }
 
 func (l *LegistarApi) formatUrl(pathFmt string, args ...interface{}) string {

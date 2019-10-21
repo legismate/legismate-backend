@@ -11,53 +11,54 @@ import (
 )
 
 var once sync.Once
-var lc *legisCache
+var lc *LegisCache
 
-func GetLegisCache() *legisCache {
+func GetLegisCache() *LegisCache {
 	once.Do(func() {
 		c, err := bigcache.NewBigCache(bigcache.DefaultConfig(12 * time.Hour))
 		if err != nil {
-			panic("WE NEED DA CACHE" + err.Error())
+			log.WithError(err).Panic("couldn't create the cache: exiting")
 		}
-		lc = &legisCache{c: c}
+		lc = &LegisCache{c: c}
 	})
 	return lc
 }
 
-type legisCache struct {
+type LegisCache struct {
 	c *bigcache.BigCache
 }
 
-func (l *legisCache) Delete(key string) (err error) {
+func (l *LegisCache) Delete(key string) (err error) {
 	if err = l.c.Delete(key); err != nil {
-		err = fmt.Errorf("legisCache delete error: %w", err)
+		err = fmt.Errorf("LegisCache delete error: %w", err)
 	}
 	return
 }
 
-func (l *legisCache) AddToCache(key string, object interface{}) {
+func (l *LegisCache) AddToCache(key string, object interface{}) {
 	objectJson, err := json.Marshal(object)
 	if err != nil {
-		log.WithError(err).WithField("legisCacheKey", key).Error("legisCache marshal error")
+		log.WithError(err).WithField("legisCacheKey", key).Error("LegisCache marshal error")
 		return
 	}
 	if err = l.c.Set(key, objectJson); err != nil {
-		log.WithError(err).WithField("legisCacheKey", key).Error("legisCache set error")
+		log.WithError(err).WithField("legisCacheKey", key).Error("LegisCache set error")
 	}
+	log.WithField("legisCacheKey", key).Info("added to LegisCache")
 }
 
-func (l *legisCache) GetFromCache(key string, objectToUnmarshal interface{}) error {
+func (l *LegisCache) GetFromCache(key string, objectToUnmarshal interface{}) error {
 	retrievedItem, err := l.c.Get(key)
 	if err != nil {
 		return err
 	}
 	if err := json.Unmarshal(retrievedItem, objectToUnmarshal); err != nil {
-		return fmt.Errorf("legisCache unmmarshal error: %w")
+		return fmt.Errorf("LegisCache unmmarshal error: %w")
 	}
-	log.WithField("legisCacheKey", key).Info("hit legisCache, returning unmarshaled object")
+	//log.WithField("legisCacheKey", key).Info("hit LegisCache, returning unmarshaled object")
 	return nil
 }
 
-func (l *legisCache) NotFound(err error) bool {
+func (l *LegisCache) NotFound(err error) bool {
 	return errors.Is(err, bigcache.ErrEntryNotFound)
 }

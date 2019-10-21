@@ -1,13 +1,17 @@
-package main
+package api
 
 import (
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+
+	"github.com/legismate/legismate_backend/cache"
 )
 
-func getRouter() *chi.Mux {
+var legisCache = cache.GetLegisCache()
+
+func GetRouter() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -16,17 +20,19 @@ func getRouter() *chi.Mux {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(middleware.SetHeader("Content-type", "application/json"))
+	//r.Use(CacheCtx)
 
 	// everything in districts will take address and level query param
 	r.Route("/districts", func(r chi.Router) { // everything in districts will take address
 		r.Get("/", getDistrictByLocation)
-		r.Get("/representatives", getRepsByDistrict) // query params for level adn district number
+		r.Get("/representatives", getRepsByDistrict) // query params for level and district number
 		r.Get("/deadlines", getDeadlinesByDistrict)
 	})
 
 	r.Route("/representatives", func(r chi.Router) {
-		r.Get("/{repId}", getRepByID)
-		r.Get("/{repId}/history", getRepBillHistory)
+		reps := getRepresentatives(legisCache)
+		r.Get("/{repId}", reps.getRepByID)
+		r.Get("/{repId}/history", reps.getRepBillHistory)
 	})
 
 	r.Route("/bills", func(r chi.Router) {
