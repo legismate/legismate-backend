@@ -230,7 +230,7 @@ func (l *LegistarApi) GetSingleBillDetail(matterId int) (*models.BillDetailed, e
 	// grab the last version item, its ordered by "Value" field so the last will always be the most current
 	latestVersion := versions[len(versions)-1]
 	detailed.CurrentVersionNumber = latestVersion.Value
-	resp, err = doSimpleAPIGetRequest(cli, l.formatUrl(matterTextVersions, matterId, latestVersion.Key))
+	resp, err = doSimpleAPIGetRequest(cli, l.formatUrl(matterText, matterId, latestVersion.Key))
 	if err != nil {
 		return nil, err
 	}
