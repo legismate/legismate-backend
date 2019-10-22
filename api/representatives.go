@@ -4,23 +4,25 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi"
-	"github.com/legismate/legismate_backend/cache"
-	"github.com/legismate/legismate_backend/external"
-	"github.com/legismate/legismate_backend/models"
-	log "github.com/sirupsen/logrus"
 	"net/http"
+
+	"github.com/go-chi/chi"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/legismate/legismate_backend/cache"
+	"github.com/legismate/legismate_backend/external/legistar"
+	"github.com/legismate/legismate_backend/models"
 )
 
 func getRepresentatives(c *cache.LegisCache) *representatives {
-	return &representatives{legistar: external.GetLegistarApi("seattle", c)}
+	return &representatives{legistar: legistar.GetLegistarApi("seattle", c)}
 }
 
 type representatives struct {
-	legistar *external.LegistarApi
+	legistar *legistar.LegistarApi
 }
 
-func (reps *representatives) getLegistarRepFromEmail(emailBase64 string) (*external.Person, error) {
+func (reps *representatives) getLegistarRepFromEmail(emailBase64 string) (*legistar.Person, error) {
 	log.Info("retrieving legistar rep from legistar API")
 	email, err := base64.StdEncoding.DecodeString(emailBase64)
 	if err != nil {
@@ -64,7 +66,7 @@ func (reps *representatives) getRepBillHistory(w http.ResponseWriter, r *http.Re
 			http.Error(w, fmt.Errorf("couldn't get vote details: %w", err).Error(), http.StatusInternalServerError)
 			return
 		}
-		agendaDate, _ := external.ParseLegistarTime(voteDetail.EventItemLastModifiedUtc)
+		agendaDate, _ := legistar.ParseLegistarTime(voteDetail.EventItemLastModifiedUtc)
 		representativeVotes = append(representativeVotes, &models.Vote{
 			Bill: &models.Bill{
 				File:       voteDetail.EventItemMatterFile,

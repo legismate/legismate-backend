@@ -2,13 +2,12 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/go-chi/chi"
 	"net/http"
 	"strconv"
 
-	//"github.com/go-chi/chi"
+	"github.com/go-chi/chi"
 
-	"github.com/legismate/legismate_backend/external"
+	"github.com/legismate/legismate_backend/external/legistar"
 	"github.com/legismate/legismate_backend/models"
 )
 
@@ -28,8 +27,8 @@ func getBillsByLevel(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "levelValue is required query parameter and must be seattle", http.StatusBadRequest)
 		return
 	}
-	legistar := external.GetLegistarApi(levelValue, nil)
-	bills, err := legistar.GetUpcomingBills()
+	legistarApi := legistar.GetLegistarApi(levelValue, nil)
+	bills, err := legistarApi.GetUpcomingBills()
 	if err != nil {
 		http.Error(w, "upcoming bills error: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -50,8 +49,8 @@ func getBillsByLegistarID(w http.ResponseWriter, r *http.Request) {
 	// fixme: don't want to have to require address at every api call, but legistar does require you always pass the "Client"
 	//  variable. so we have to figure something out here. for now we are hardcoding.
 	//  ** maybe everything should take address query param? **
-	legistar := external.GetLegistarApi("seattle", nil)
-	detailedBill, err := legistar.GetSingleBillDetail(mIdInt)
+	legistarApi := legistar.GetLegistarApi("seattle", nil)
+	detailedBill, err := legistarApi.GetSingleBillDetail(mIdInt)
 	if err != nil {
 		http.Error(w, "single bill detail error: "+err.Error(), http.StatusInternalServerError)
 		return
